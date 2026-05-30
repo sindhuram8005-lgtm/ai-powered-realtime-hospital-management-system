@@ -3,16 +3,18 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "watch": "npx tsx watch src/index.ts",
+    "watch": "node --experimental-strip-types --watch src/server.ts",
     "start:ngrok": "ngrok http 5000",
     "start:inngest": "npx inngest-cli@latest dev",
-    "start:server": "npx tsx watch src/server.ts",
-    "start:mongo": "npx tsx src/run-mongo.ts",
+    "start:server": "node --experimental-strip-types src/server.ts",
+    "start:mongo": "node --experimental-strip-types src/run-mongo.ts",
     "test-auth": "node --experimental-strip-types src/test-auth-deps.ts",
+    "test-imports": "node --experimental-strip-types src/test-imports.ts",
     "dev": "concurrently -c \"blue,magenta,cyan\" -n \"SERVER,NGROK,INNGEST\" \"npm run start:server\" \"npm run start:ngrok\" \"npm run start:inngest\""
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "^25.9.1",
     "concurrently": "^9.2.1",
     "mongodb-memory-server": "^11.2.0",
     "nodemon": "^3.1.14",
