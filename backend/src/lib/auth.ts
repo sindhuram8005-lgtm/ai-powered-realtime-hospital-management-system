@@ -12,8 +12,10 @@ import {
 import { Polar } from "@polar-sh/sdk";
 import invoice from "../models/invoice";
 
+console.log("TRACE: auth.ts starting execution...");
 const client = new MongoClient(process.env.MONGO_URI || "");
 const db = client.db();
+console.log("TRACE: MongoClient and DB initialized...");
 
 export const polarClient = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN,
@@ -22,6 +24,7 @@ export const polarClient = new Polar({
   // Access tokens obtained in Production are for instance not usable in the Sandbox environment.
   server: "sandbox",
 });
+console.log("TRACE: polarClient initialized...");
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),

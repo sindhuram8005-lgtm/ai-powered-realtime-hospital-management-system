@@ -3,16 +3,20 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "watch": "bun --watch index.ts",
+    "watch": "npx tsx watch src/index.ts",
     "start:ngrok": "ngrok http 5000",
     "start:inngest": "npx inngest-cli@latest dev",
-    "start:server": "nodemon --exec bun run src/server.ts",
-    "dev": "concurrently -c \"blue,magenta,cyan\" -n \"SERVER,NGROK,INNGEST\" \"bun run start:server\" \"bun run start:ngrok\" \"npm run start:inngest\""
+    "start:server": "npx tsx watch src/server.ts",
+    "start:mongo": "npx tsx src/run-mongo.ts",
+    "test-auth": "node --experimental-strip-types src/test-auth-deps.ts",
+    "dev": "concurrently -c \"blue,magenta,cyan\" -n \"SERVER,NGROK,INNGEST\" \"npm run start:server\" \"npm run start:ngrok\" \"npm run start:inngest\""
   },
   "devDependencies": {
     "@types/bun": "latest",
     "concurrently": "^9.2.1",
-    "nodemon": "^3.1.14"
+    "mongodb-memory-server": "^11.2.0",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.22.3"
   },
   "peerDependencies": {
     "typescript": "^5"

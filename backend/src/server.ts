@@ -1,3 +1,4 @@
+console.log("DEBUG: server.ts module is executing...");
 import dotenv from "dotenv";
 import express, {
   type Application,
