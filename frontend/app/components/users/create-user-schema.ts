@@ -27,6 +27,15 @@ export const userSchema = (isEdit: boolean) => {
     bloodgroup: z.string().optional(),
     medicalHistory: z.string().optional(),
     status: z.string().optional(),
+    uhid: z.string().optional(),
+    abhaNumber: z.string().optional(),
+    abhaAddress: z.string().optional(),
+    dob: z.string().optional(),
+    phoneNumber: z.string().optional(),
+    address: z.string().optional(),
+    emergencyContactName: z.string().optional(),
+    emergencyContactRelationship: z.string().optional(),
+    emergencyContactPhone: z.string().optional(),
     password: isEdit
       ? z
           .string()

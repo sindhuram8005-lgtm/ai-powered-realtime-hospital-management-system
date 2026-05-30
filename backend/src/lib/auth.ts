@@ -10,7 +10,7 @@ import {
   webhooks,
 } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
-import invoice from "../models/invoice";
+import invoice from "../models/invoice.ts";
 
 console.log("TRACE: auth.ts starting execution...");
 const client = new MongoClient(process.env.MONGO_URI || "");
@@ -25,6 +25,19 @@ export const polarClient = new Polar({
   server: "sandbox",
 });
 console.log("TRACE: polarClient initialized...");
+
+// Mock Polar customer creation if token is missing/invalid to allow seeding and local testing
+if (!process.env.POLAR_ACCESS_TOKEN) {
+  const customersProto = Object.getPrototypeOf(polarClient.customers);
+  customersProto.create = async () => {
+    console.log("🌱 MOCK: Bypassing Polar customer creation (no token)");
+    return { id: "mock_polar_customer_id" } as any;
+  };
+  customersProto.list = async () => {
+    console.log("🌱 MOCK: Bypassing Polar customer list (no token)");
+    return { result: { items: [] } } as any;
+  };
+}
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
@@ -107,10 +120,68 @@ export const auth = betterAuth({
       },
       appointments: {
         type: "string[]",
+        required: false,
+      },
+      uhid: {
+        type: "string",
+        required: false,
+      },
+      abhaNumber: {
+        type: "string",
+        required: false,
+      },
+      abhaAddress: {
+        type: "string",
+        required: false,
+      },
+      dob: {
+        type: "string",
+        required: false,
+      },
+      phoneNumber: {
+        type: "string",
+        required: false,
+      },
+      address: {
+        type: "string",
+        required: false,
+      },
+      emergencyContact: {
+        type: "string",
+        required: false,
+      },
+      allergies: {
+        type: "string",
+        required: false,
+      },
+      chronicDiseases: {
+        type: "string",
+        required: false,
+      },
+      pastProcedures: {
+        type: "string",
+        required: false,
+      },
+      diagnoses: {
+        type: "string",
+        required: false,
+      },
+      familyMembers: {
+        type: "string",
+        required: false,
+      },
+      consents: {
+        type: "string",
+        required: false,
+      },
+      timelineNotes: {
+        type: "string",
+        required: false,
       },
     },
   },
 });
+
 
 // more advanced example with role-based access control using the admin plugin
 // admin({

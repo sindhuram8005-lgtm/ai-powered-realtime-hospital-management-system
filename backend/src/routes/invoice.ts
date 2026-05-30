@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { requireAuth } from "../middleware/auth";
+import { requireAuth } from "../middleware/auth.ts";
 import {
   createCheckoutSession,
   getMyActiveInvoice,
   getBillingHistory,
   allBilling,
-} from "../controllers/invoice";
-import { checkRole } from "../middleware/checkRole";
+} from "../controllers/invoice.ts";
+import { checkRole } from "../middleware/checkRole.ts";
 
 const invoiceRouter = Router();
 

@@ -1,5 +1,5 @@
+import "dotenv/config";
 console.log("DEBUG: server.ts module is executing...");
-import dotenv from "dotenv";
 import express, {
   type Application,
   type Request,
@@ -12,27 +12,36 @@ import morgan from "morgan";
 import { fromNodeHeaders, toNodeHandler } from "better-auth/node";
 import { serve } from "inngest/express";
 import { createServer } from "http";
+import mongoose from "mongoose";
 
-import { connectDB } from "./config/db";
-import { auth } from "./lib/auth";
-import userRouter from "./routes/user";
-import activityLogRouter from "./routes/activity";
-import { inngest } from "./inngest/client";
+import { connectDB } from "./config/db.ts";
+import { auth, polarClient } from "./lib/auth.ts";
+import userRouter from "./routes/user.ts";
+import activityLogRouter from "./routes/activity.ts";
+import { inngest } from "./inngest/client.ts";
 import {
   admitPatient,
   analyzeXRayJob,
   addChargeToInvoice,
-} from "./inngest/functions";
-import notificationRouter from "./routes/notification";
-import labResultsRouter from "./routes/labResults";
-import invoiceRouter from "./routes/invoice";
-import { getIO, initSocket } from "./lib/socket";
-import { uploadRouter } from "./lib/uploadthing";
+} from "./inngest/functions.ts";
+import notificationRouter from "./routes/notification.ts";
+import labResultsRouter from "./routes/labResults.ts";
+import invoiceRouter from "./routes/invoice.ts";
+import { getIO, initSocket } from "./lib/socket.ts";
+import { uploadRouter } from "./lib/uploadthing.ts";
 import { createRouteHandler } from "uploadthing/express";
-import uploadthingRouter from "./routes/uploadthing";
-
-// Load environment variables from .env file
-dotenv.config();
+import uploadthingRouter from "./routes/uploadthing.ts";
+import appointmentRouter from "./routes/appointment.ts";
+import prescriptionRouter from "./routes/prescription.ts";
+import ipdRouter from "./routes/ipd.ts";
+import complianceRouter from "./routes/compliance.ts";
+import pharmacyRouter from "./routes/pharmacy.ts";
+import procurementRouter from "./routes/procurement.ts";
+import surgeryRouter from "./routes/surgery.ts";
+import nursingRouter from "./routes/nursing.ts";
+import hrRouter from "./routes/hr.ts";
+import analyticsRouter from "./routes/analytics.ts";
+import aiRouter from "./routes/ai.ts";
 
 // Initialize Express application
 const app: Application = express();
@@ -88,6 +97,17 @@ app.use("/api/activity-logs", activityLogRouter);
 app.use("/api/notifications", notificationRouter);
 app.use("/api/lab-results", labResultsRouter);
 app.use("/api/invoices", invoiceRouter);
+app.use("/api/appointments", appointmentRouter);
+app.use("/api/prescriptions", prescriptionRouter);
+app.use("/api/ipd", ipdRouter);
+app.use("/api/compliance", complianceRouter);
+app.use("/api/pharmacy", pharmacyRouter);
+app.use("/api/procurement", procurementRouter);
+app.use("/api/surgeries", surgeryRouter);
+app.use("/api/nursing", nursingRouter);
+app.use("/api/hr", hrRouter);
+app.use("/api/analytics", analyticsRouter);
+app.use("/api/ai", aiRouter);
 // inngest API route
 app.use(
   "/api/inngest",
@@ -111,7 +131,84 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 
 // Start the server
 connectDB()
-  .then(() => {
+  .then(async () => {
+    // Seed default users if DB is empty
+    try {
+      const db = mongoose.connection.db;
+      if (db) {
+        const userCollection = db.collection("user");
+        const count = await userCollection.countDocuments();
+        if (count === 0) {
+          console.log("🌱 Database is empty. Seeding default users...");
+
+          // 1. Seed Admin
+          const adminUser = await auth.api.signUpEmail({
+            body: {
+              email: "admin@hospital.com",
+              password: "Password123",
+              name: "System Admin",
+            },
+          });
+          if (adminUser) {
+            await userCollection.updateOne(
+              { email: "admin@hospital.com" },
+              { $set: { role: "admin" } }
+            );
+          }
+
+          // 2. Seed Doctor
+          const doctorUser = await auth.api.signUpEmail({
+            body: {
+              email: "doctor@hospital.com",
+              password: "Password123",
+              name: "Dr. John Doe",
+            },
+          });
+          if (doctorUser) {
+            await userCollection.updateOne(
+              { email: "doctor@hospital.com" },
+              {
+                $set: {
+                  role: "doctor",
+                  specialization: "Cardiology",
+                  department: "Radiology",
+                },
+              }
+            );
+          }
+
+          // 3. Seed Patient
+          const patientUser = await auth.api.signUpEmail({
+            body: {
+              email: "patient@hospital.com",
+              password: "Password123",
+              name: "Jane Smith",
+            },
+          });
+          if (patientUser) {
+            await userCollection.updateOne(
+              { email: "patient@hospital.com" },
+              {
+                $set: {
+                  role: "patient",
+                  gender: "Female",
+                  bloodgroup: "O+",
+                  age: "28",
+                },
+              }
+            );
+          }
+
+          console.log("✅ Default users seeded successfully:");
+          console.log("   - Admin: admin@hospital.com / Password123");
+          console.log("   - Doctor: doctor@hospital.com / Password123");
+          console.log("   - Patient: patient@hospital.com / Password123");
+        }
+      }
+    } catch (err) {
+      console.error("❌ Seeding default users failed:", err);
+    }
+
     httpServer.listen(PORT, () => {
       console.log(
         `🚀 Server + Socket.IO running in ${process.env.NODE_ENV} mode on port ${PORT}`,

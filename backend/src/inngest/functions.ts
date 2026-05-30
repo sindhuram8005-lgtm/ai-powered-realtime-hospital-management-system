@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import { inngest } from "./client";
+import { inngest } from "./client.ts";
 import { NonRetriableError } from "inngest";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { notifyUsers } from "./notifyUsers";
-import labResults from "../models/labResults";
-import invoice from "../models/invoice";
+import { notifyUsers } from "./notifyUsers.ts";
+import labResults from "../models/labResults.ts";
+import invoice from "../models/invoice.ts";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY!);
 

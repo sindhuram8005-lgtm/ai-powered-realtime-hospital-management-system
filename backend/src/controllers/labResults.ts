@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
-import LabResult from "../models/labResults";
-import { inngest } from "../inngest/client";
-import { logActivity } from "../lib/activity";
+import LabResult from "../models/labResults.ts";
+import { inngest } from "../inngest/client.ts";
+import { logActivity } from "../lib/activity.ts";
 
 // Create a new lab result
 export const createLabResult = async (req: Request, res: Response) => {

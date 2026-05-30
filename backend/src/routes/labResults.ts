@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { requireAuth } from "../middleware/auth"; // Your Better Auth middleware
-import { checkRole } from "../middleware/checkRole"; // Your RBAC middleware
+import { requireAuth } from "../middleware/auth.ts"; // Your Better Auth middleware
+import { checkRole } from "../middleware/checkRole.ts"; // Your RBAC middleware
 import {
   createLabResult,
   getPatientLabResults,
   updateLabResult,
-} from "../controllers/labResults";
+} from "../controllers/labResults.ts";
 
 const labResultsRouter = Router();
 

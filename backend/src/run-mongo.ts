@@ -28,6 +28,7 @@ async function main() {
   
   // Keep process alive
   console.log("Database server is ready. Keep this process running.");
+  setInterval(() => {}, 60000);
 }
 
 main().catch((err) => {

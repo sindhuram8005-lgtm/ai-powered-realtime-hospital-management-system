@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import ActivityLog from "../models/activityLog";
-import { logActivity } from "../lib/activity";
+import ActivityLog from "../models/activityLog.ts";
+import { logActivity } from "../lib/activity.ts";
 import mongoose from "mongoose";
 
 // Controller to add an activity log

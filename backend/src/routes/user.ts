@@ -8,9 +8,10 @@ import {
   updateUser,
   admitPatient,
   getPolarPortalLink,
-} from "../controllers/user";
-import { requireAuth } from "../middleware/auth";
-import { checkRole } from "../middleware/checkRole";
+  getPatientFHIR,
+} from "../controllers/user.ts";
+import { requireAuth } from "../middleware/auth.ts";
+import { checkRole } from "../middleware/checkRole.ts";
 
 userRouter.get(
   "/",
@@ -37,6 +38,8 @@ userRouter.post(
 );
 
 userRouter.get("/polar-portal/:userId", requireAuth, getPolarPortalLink);
+
+userRouter.get("/:id/fhir", requireAuth, checkRole(["admin", "doctor", "nurse", "patient"]), getPatientFHIR);
 
 // if :id route is first, it will catch all routes including /update/:id, so we need to put it after the /update/:id route
 export default userRouter;

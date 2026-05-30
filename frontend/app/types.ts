@@ -63,6 +63,20 @@ export interface User {
   triageReasoning?: string;
   assignedDoctorName?: string;
   assignedNurseName?: string;
+  uhid?: string;
+  abhaNumber?: string;
+  abhaAddress?: string;
+  dob?: string;
+  phoneNumber?: string;
+  address?: string;
+  emergencyContact?: { name: string; relationship: string; phone: string };
+  allergies?: Array<{ type: "drug" | "food" | "environment" | "other"; item: string; severity: "mild" | "moderate" | "severe" }>;
+  chronicDiseases?: string[];
+  pastProcedures?: string[];
+  diagnoses?: string[];
+  familyMembers?: Array<{ relativeId: string; relationship: string; relativeName: string }>;
+  consents?: Array<{ formName: string; status: "active" | "revoked"; signedAt: string }>;
+  timelineNotes?: Array<{ note: string; authorName: string; authorRole: string; date: string }>;
 }
 
 export interface PaginatedResponse<T> {

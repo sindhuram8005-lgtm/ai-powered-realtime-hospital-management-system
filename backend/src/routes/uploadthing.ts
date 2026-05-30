@@ -1,5 +1,5 @@
-import { deleteFile } from "../controllers/uploadthing";
-import { requireAuth } from "../middleware/auth";
+import { deleteFile } from "../controllers/uploadthing.ts";
+import { requireAuth } from "../middleware/auth.ts";
 
 import express from "express";
 

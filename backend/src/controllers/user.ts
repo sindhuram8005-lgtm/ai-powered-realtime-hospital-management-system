@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
 import type { Request, Response } from "express";
-import { logActivity } from "../lib/activity";
-import { inngest } from "../inngest/client";
-import { auth, polarClient } from "../lib/auth";
+import { logActivity } from "../lib/activity.ts";
+import { inngest } from "../inngest/client.ts";
+import { auth, polarClient } from "../lib/auth.ts";
 import { fromNodeHeaders } from "better-auth/node";
+import Prescription from "../models/prescription.ts";
+import NursingRecord from "../models/nursingRecord.ts";
+import Appointment from "../models/appointment.ts";
 
 export const getUserById = async (req: Request, res: Response) => {
   try {
@@ -183,5 +186,133 @@ export const getPolarPortalLink = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error fetching Polar portal link:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// FHIR JSON Bundle Exporter
+export const getPatientFHIR = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const queryId = id?.length === 24 ? new mongoose.Types.ObjectId(id as string) : id;
+    const userCollection = mongoose.connection.collection("user");
+    const user = await userCollection.findOne({ _id: queryId as mongoose.Types.ObjectId });
+
+    if (!user) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // Retrieve clinical records for compilation
+    const prescriptions = await Prescription.find({ patient: user._id }).populate("doctor", "name specialization");
+    const nursingRecords = await NursingRecord.find({ patient: user._id });
+    const appointments = await Appointment.find({ patient: user._id }).populate("doctor", "name");
+
+    // Construct FHIR Resources
+    const fhirEntries: any[] = [];
+
+    // 1. Patient Resource
+    const patientResource = {
+      resource: {
+        resourceType: "Patient",
+        id: user._id.toString(),
+        active: true,
+        name: [{ use: "official", text: user.name }],
+        gender: user.gender ? user.gender.toLowerCase() : "unknown",
+        birthDate: user.age ? new Date(Date.now() - parseInt(user.age) * 365 * 24 * 3600000).toISOString().split("T")[0] : undefined,
+        identifier: [
+          { system: "https://ndhm.gov.in/abha", value: user.abhaNumber || "N/A" },
+          { system: "http://hospital.com/uhid", value: user.uhid || `UHID-${user._id.toString().slice(-6).toUpperCase()}` }
+        ]
+      }
+    };
+    fhirEntries.push(patientResource);
+
+    // 2. Condition Resources (from prescription clinical codes)
+    prescriptions.forEach((p) => {
+      fhirEntries.push({
+        resource: {
+          resourceType: "Condition",
+          id: p._id.toString(),
+          subject: { reference: `Patient/${user._id.toString()}` },
+          code: {
+            coding: [
+              {
+                system: "http://hl7.org/fhir/sid/icd-10",
+                code: p.icd10Code || "Z00.00",
+                display: p.icd10Description || "General Consultation"
+              }
+            ]
+          },
+          clinicalStatus: {
+            coding: [{ system: "http://terminology.hl7.org/CodeSystem/condition-clinical", code: "active" }]
+          },
+          note: [{ text: p.soapNotes }]
+        }
+      });
+
+      // 3. MedicationRequest Resources (from medications prescribed)
+      p.medications.forEach((m: any, idx: number) => {
+        fhirEntries.push({
+          resource: {
+            resourceType: "MedicationRequest",
+            id: `${p._id.toString()}-med-${idx}`,
+            status: p.status === "dispensed" ? "completed" : "active",
+            intent: "order",
+            subject: { reference: `Patient/${user._id.toString()}` },
+            medicationCodeableConcept: {
+              coding: [{ display: m.name }]
+            },
+            dosageInstruction: [{ text: `${m.dosage} for ${m.duration}` }]
+          }
+        });
+      });
+    });
+
+    // 4. Observation Resources (from Bedside Vitals logs)
+    nursingRecords.forEach((nr) => {
+      nr.vitalsLog.forEach((v: any, idx: number) => {
+        if (v.pulse) {
+          fhirEntries.push({
+            resource: {
+              resourceType: "Observation",
+              id: `${nr._id.toString()}-pulse-${idx}`,
+              status: "final",
+              code: {
+                coding: [{ system: "http://loinc.org", code: "8867-4", display: "Heart rate" }]
+              },
+              subject: { reference: `Patient/${user._id.toString()}` },
+              valueQuantity: { value: v.pulse, unit: "beats/min" }
+            }
+          });
+        }
+        if (v.spo2) {
+          fhirEntries.push({
+            resource: {
+              resourceType: "Observation",
+              id: `${nr._id.toString()}-spo2-${idx}`,
+              status: "final",
+              code: {
+                coding: [{ system: "http://loinc.org", code: "2708-6", display: "Oxygen saturation" }]
+              },
+              subject: { reference: `Patient/${user._id.toString()}` },
+              valueQuantity: { value: v.spo2, unit: "%" }
+            }
+          });
+        }
+      });
+    });
+
+    // FHIR Bundle Envelope
+    const fhirBundle = {
+      resourceType: "Bundle",
+      id: `bundle-${user._id.toString()}`,
+      type: "collection",
+      timestamp: new Date().toISOString(),
+      entry: fhirEntries,
+    };
+
+    res.status(200).json(fhirBundle);
+  } catch (error) {
+    console.error("Error creating HL7/FHIR bundle:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

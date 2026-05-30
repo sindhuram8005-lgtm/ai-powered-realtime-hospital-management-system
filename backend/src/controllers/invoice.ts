@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
-import invoice from "../models/invoice";
+import invoice from "../models/invoice.ts";
 import { fromNodeHeaders } from "better-auth/node";
 import mongoose from "mongoose";
-import { auth, polarClient } from "../lib/auth";
+import { auth, polarClient } from "../lib/auth.ts";
 
 export const getMyActiveInvoice = async (req: Request, res: Response) => {
   try {

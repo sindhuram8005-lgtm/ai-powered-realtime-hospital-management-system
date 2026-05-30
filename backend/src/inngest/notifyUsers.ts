@@ -1,5 +1,5 @@
-import { getIO } from "../lib/socket";
-import Notification from "../models/notification";
+import { getIO } from "../lib/socket.ts";
+import Notification from "../models/notification.ts";
 
 export const notifyUsers = async (
      doctorId: string,

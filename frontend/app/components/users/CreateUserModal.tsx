@@ -66,6 +66,15 @@ const CreateUserModal = ({ role, user, loading }: UserModalProps) => {
       bloodgroup: "",
       medicalHistory: "",
       status: role === "patient" ? "admitted" : "active",
+      uhid: "",
+      abhaNumber: "",
+      abhaAddress: "",
+      dob: "",
+      phoneNumber: "",
+      address: "",
+      emergencyContactName: "",
+      emergencyContactRelationship: "",
+      emergencyContactPhone: "",
     },
   });
   // Reset form logic...
@@ -83,6 +92,15 @@ const CreateUserModal = ({ role, user, loading }: UserModalProps) => {
           gender: user.gender || "",
           bloodgroup: user.bloodgroup || "",
           medicalHistory: user.medicalHistory || "",
+          uhid: user.uhid || "",
+          abhaNumber: user.abhaNumber || "",
+          abhaAddress: user.abhaAddress || "",
+          dob: user.dob || "",
+          phoneNumber: user.phoneNumber || "",
+          address: user.address || "",
+          emergencyContactName: user.emergencyContact?.name || "",
+          emergencyContactRelationship: user.emergencyContact?.relationship || "",
+          emergencyContactPhone: user.emergencyContact?.phone || "",
         });
       } else {
         form.reset({
@@ -96,6 +114,15 @@ const CreateUserModal = ({ role, user, loading }: UserModalProps) => {
           gender: "",
           bloodgroup: "",
           medicalHistory: "",
+          uhid: role === "patient" ? `HMS-P-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}` : "",
+          abhaNumber: "",
+          abhaAddress: "",
+          dob: "",
+          phoneNumber: "",
+          address: "",
+          emergencyContactName: "",
+          emergencyContactRelationship: "",
+          emergencyContactPhone: "",
         });
       }
     }
@@ -157,6 +184,28 @@ const CreateUserModal = ({ role, user, loading }: UserModalProps) => {
       payload.gender = data.gender;
       payload.bloodgroup = data.bloodgroup;
       payload.medicalHistory = data.medicalHistory;
+      payload.uhid = data.uhid || `HMS-P-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+      payload.dob = data.dob || "";
+      payload.phoneNumber = data.phoneNumber || "";
+      payload.address = data.address || "";
+      payload.abhaNumber = data.abhaNumber || "";
+      payload.abhaAddress = data.abhaAddress || "";
+      payload.emergencyContact = {
+        name: data.emergencyContactName || "",
+        relationship: data.emergencyContactRelationship || "",
+        phone: data.emergencyContactPhone || "",
+      };
+      
+      // Initialize arrays on creation
+      if (!isEdit) {
+        payload.allergies = [];
+        payload.chronicDiseases = [];
+        payload.pastProcedures = [];
+        payload.diagnoses = [];
+        payload.familyMembers = [];
+        payload.consents = [];
+        payload.timelineNotes = [];
+      }
     } else if (["nurse", "lab_tech", "pharmacist"].includes(role)) {
       payload.department = data.department;
     }
@@ -295,6 +344,22 @@ const CreateUserModal = ({ role, user, loading }: UserModalProps) => {
               <div className="grid grid-cols-2 gap-4">
                 <CustomInput
                   control={form.control}
+                  name="uhid"
+                  label="UHID (Unique Health ID)"
+                  placeholder="Auto-generated if blank"
+                  disabled={isEdit}
+                />
+                <CustomInput
+                  control={form.control}
+                  name="dob"
+                  label="Date of Birth"
+                  type="date"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <CustomInput
+                  control={form.control}
                   name="age"
                   label="Age"
                   type="number"
@@ -307,17 +372,58 @@ const CreateUserModal = ({ role, user, loading }: UserModalProps) => {
                   options={GENDER_OPTIONS}
                 />
               </div>
-              <CustomSelect
+
+              <div className="grid grid-cols-2 gap-4">
+                <CustomSelect
+                  control={form.control}
+                  name="bloodgroup"
+                  label="Blood Group"
+                  options={BLOOD_GROUP_OPTIONS}
+                />
+                <CustomInput
+                  control={form.control}
+                  name="phoneNumber"
+                  label="Phone Number"
+                  placeholder="e.g. +91 98765 43210"
+                />
+              </div>
+
+              <CustomInput
                 control={form.control}
-                name="bloodgroup"
-                label="Blood Group"
-                options={BLOOD_GROUP_OPTIONS}
+                name="address"
+                label="Permanent Address"
+                placeholder="Street name, City, State, ZIP"
               />
+
+              <div className="p-3 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-zinc-50 dark:bg-zinc-900/50 space-y-3">
+                <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Emergency Contact</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <CustomInput
+                    control={form.control}
+                    name="emergencyContactName"
+                    label="Contact Name"
+                    placeholder="Jane Doe"
+                  />
+                  <CustomInput
+                    control={form.control}
+                    name="emergencyContactRelationship"
+                    label="Relationship"
+                    placeholder="Spouse / Parent / Sibling"
+                  />
+                </div>
+                <CustomInput
+                  control={form.control}
+                  name="emergencyContactPhone"
+                  label="Contact Phone"
+                  placeholder="e.g. +91 98765 43210"
+                />
+              </div>
+
               <CustomInput
                 control={form.control}
                 name="medicalHistory"
-                label="Medical History / Allergies / Reason for Admission"
-                placeholder="Peanuts, Penicillin..."
+                label="Reason for Admission / General Medical History"
+                placeholder="Reason for hospitalization or background"
                 startIcon={<FileHeart size={18} />}
               />
             </>

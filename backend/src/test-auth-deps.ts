@@ -20,7 +20,7 @@ async function run() {
   await import("@polar-sh/sdk");
   
   console.log("7. Importing models/invoice...");
-  await import("./models/invoice");
+  await import("./models/invoice.ts");
   
   console.log("All auth.ts dependencies imported successfully!");
 }

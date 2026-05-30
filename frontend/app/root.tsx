@@ -71,9 +71,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
-  const queryClient = new QueryClient();
+const queryClient = new QueryClient();
 
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
